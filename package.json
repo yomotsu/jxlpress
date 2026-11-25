@@ -1,0 +1,118 @@
+{
+	"name": "jxlpress",
+	"productName": "JXLPress",
+	"version": "0.1.0",
+	"description": "Convert images to JPEG XL with cjxl",
+	"author": "yomotsu",
+	"license": "MIT",
+	"homepage": "https://github.com/yomotsu/jxlpress",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/yomotsu/jxlpress.git"
+	},
+	"bugs": {
+		"url": "https://github.com/yomotsu/jxlpress/issues"
+	},
+	"main": "src/main/main.js",
+	"scripts": {
+		"prestart": "node scripts/patch-electron-name.mjs",
+		"start": "electron .",
+		"test": "node --test test/*.test.js",
+		"fetch-cjxl": "node scripts/fetch-cjxl.mjs",
+		"dist": "electron-builder",
+		"dist:mac": "electron-builder --mac",
+		"dist:win": "electron-builder --win",
+		"build-cjxl-mac": "bash scripts/build-cjxl-mac.sh",
+		"postinstall": "node scripts/patch-electron-name.mjs",
+		"icons": "electron scripts/build-icons.cjs"
+	},
+	"build": {
+		"appId": "com.yomotsu.jxlpress",
+		"electronFuses": {
+			"runAsNode": false,
+			"enableNodeOptionsEnvironmentVariable": false,
+			"enableNodeCliInspectArguments": false,
+			"onlyLoadAppFromAsar": true
+		},
+		"files": [
+			"src/**/*",
+			"package.json"
+		],
+		"extraResources": [
+			{
+				"from": "licenses",
+				"to": "licenses"
+			},
+			{
+				"from": "LICENSE",
+				"to": "licenses/LICENSE.txt"
+			}
+		],
+		"mac": {
+			"target": [
+				{
+					"target": "dmg",
+					"arch": [
+						"arm64",
+						"x64"
+					]
+				}
+			],
+			"extraResources": [
+				{
+					"from": "vendor/cjxl/darwin-${arch}",
+					"to": "bin"
+				}
+			],
+			"category": "public.app-category.graphics-design",
+			"identity": "-",
+			"hardenedRuntime": false,
+			"gatekeeperAssess": false,
+			"icon": "build/icon.icns"
+		},
+		"win": {
+			"target": [
+				{
+					"target": "nsis",
+					"arch": [
+						"x64"
+					]
+				},
+				{
+					"target": "portable",
+					"arch": [
+						"x64"
+					]
+				}
+			],
+			"extraResources": [
+				{
+					"from": "vendor/cjxl/win32-${arch}",
+					"to": "bin"
+				}
+			],
+			"icon": "build/icon.png"
+		},
+		"nsis": {
+			"artifactName": "${productName}-${version}-win-${arch}-setup.${ext}"
+		},
+		"portable": {
+			"artifactName": "${productName}-${version}-win-${arch}-portable.${ext}"
+		},
+		"copyright": "Copyright © 2026 yomotsu",
+		"asarUnpack": [
+			"node_modules/libheif-js/**"
+		],
+		"artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+	},
+	"devDependencies": {
+		"electron": "^45.4.1",
+		"electron-builder": "^26.18.0"
+	},
+	"allowScripts": {
+		"electron@45.4.1": true
+	},
+	"dependencies": {
+		"libheif-js": "1.23.5"
+	}
+}

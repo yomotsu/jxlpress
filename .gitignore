@@ -1,0 +1,5 @@
+node_modules/
+dist/
+vendor/cjxl/*/
+.fetch-cjxl-*/
+.build-cjxl/
