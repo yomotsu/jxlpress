@@ -30,6 +30,12 @@ HEVC（HEIC）のデコードには特許ライセンス上の論点がありま
 
 起動時に GitHub Releases を確認し、新しい版があるときだけウィンドウ右下に「新しいバージョンがあります」と表示します（押すとダウンロードページが開きます）。自動ではインストールしません。ヘルプ →「アップデートを確認…」からも確認できます。更新確認でアプリが通信する先は `api.github.com` のみで、送る情報は User-Agent に含まれるアプリのバージョンだけです。
 
+### ダウンロード
+
+[GitHub Releases](https://github.com/yomotsu/jxlpress/releases) から、使っている OS 用のファイルをダウンロードしてください。各ファイルの SHA-256 は `SHA256SUMS.txt` に記載しています。
+
+**Code signing**: Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/). Windows 版のコード署名に SignPath Foundation を利用します（現在申請中で、承認後のリリースから署名されます）。詳しくは [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md) を参照してください。
+
 ### インストール
 
 **macOS**: dmg を開き、アプリを「アプリケーション」フォルダにコピーします。初回起動時に「"JXLPress.app"は開かれていません」と表示されたら、「完了」を押し（「ゴミ箱に入れる」は押さない）、「システム設定 → プライバシーとセキュリティ」の下部に表示される「このまま開く」を押してから起動してください。それでも「壊れているため開けません」と表示される場合は、ターミナルで次を実行してください。
