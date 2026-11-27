@@ -15,7 +15,10 @@ function extractZip( archivePath, extractDirectory ) {
 		? [ 'powershell', [ '-NoProfile', '-Command', `Expand-Archive -LiteralPath '${ archivePath }' -DestinationPath '${ extractDirectory }' -Force` ] ]
 		: [ 'unzip', [ '-q', '-o', archivePath, '-d', extractDirectory ] ];
 
-	const extraction = spawnSync( command[ 0 ], command[ 1 ], { stdio: 'inherit' } );
+	// Run from PowerShell 7 (e.g. GitHub Actions), the inherited PSModulePath makes Windows PowerShell 5.1
+	// load PowerShell 7's Archive module, whose Expand-Archive fails there. Let 5.1 use its own modules.
+	const env = Object.fromEntries( Object.entries( process.env ).filter( ( [ key ] ) => key.toLowerCase() !== 'psmodulepath' ) );
+	const extraction = spawnSync( command[ 0 ], command[ 1 ], { stdio: 'inherit', env } );
 	if ( extraction.error ) throw extraction.error;
 	if ( extraction.status !== 0 ) throw new Error( `${ command[ 0 ] } による zip 展開に失敗しました (終了コード ${ extraction.status })。` );
 
