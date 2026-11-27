@@ -64,7 +64,8 @@ vendor/cjxl/darwin-x64/cjxl, djxl
 **Windows**: 公式リリースの静的ビルドを取得します。
 
 ```sh
-npm run fetch-cjxl -- --platform win32
+npm run fetch-cjxl -- --platform win32                # 最新リリース
+npm run fetch-cjxl -- --platform win32 --tag v0.13.0  # タグを指定
 ```
 
 **macOS**: libjxl は macOS 用バイナリを配布しておらず、Homebrew 版は動的リンクで同梱できないため、ソースから静的ビルドします。Xcode Command Line Tools・git・python3 が必要です（cmake / ninja は `.build-cjxl/venv` に自動で入ります）。
@@ -83,9 +84,20 @@ npm run dist:win   # NSIS インストーラーとポータブル版（x64）
 npm run dist:mac   # dmg（arm64 / x64）
 ```
 
-Electron Builder の `extraResources` が `vendor/cjxl/<platform>-<arch>/` を `Resources/bin/` に同梱します。macOS は ad-hoc 署名のみで公証しておらず、Windows は署名していません。
+Electron Builder の `extraResources` が `vendor/cjxl/<darwin|win32>-<arch>/` を `Resources/bin/` に同梱します。macOS は ad-hoc 署名のみで公証しておらず、Windows は署名していません。
 
-成果物は `dist/` に生成されます。macOS 版は `JXLPress-<version>-mac-arm64.dmg` と `JXLPress-<version>-mac-x64.dmg`、Windows 版は `JXLPress-<version>-win-x64.exe` などです。
+成果物は `dist/` に生成されます。macOS 版は `JXLPress-<version>-mac-arm64.dmg` と `JXLPress-<version>-mac-x64.dmg`、Windows 版は `JXLPress-<version>-win-x64-setup.exe` と `JXLPress-<version>-win-x64-portable.exe` です。
+
+### リリース
+
+`v0.1.1` のようなタグを push すると、GitHub Actions（`.github/workflows/release.yml`）が macOS 版と Windows 版をビルドし、`SHA256SUMS.txt` と一緒に下書きのリリースへ添付します。リリースノートを書いてから公開してください。同梱する libjxl のバージョンはワークフローの `LIBJXL_TAG` で指定します。
+
+```sh
+npm version patch   # package.json のバージョンを上げてタグを作成
+git push --follow-tags
+```
+
+Windows 版のコード署名については [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md) を参照してください。
 
 ### cjxl の検出順
 

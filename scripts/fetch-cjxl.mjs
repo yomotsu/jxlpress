@@ -32,6 +32,18 @@ function targetPlatform() {
 
 }
 
+// Release tag to fetch (e.g. v0.13.0); the latest release when omitted.
+function targetTag() {
+
+	const index = process.argv.indexOf( '--tag' );
+	if ( index < 0 ) return null;
+
+	const value = process.argv[ index + 1 ];
+	if ( ! value || ! /^v\d+\.\d+\.\d+$/.test( value ) ) throw new Error( '--tag は v0.13.0 の形式で指定してください。' );
+	return value;
+
+}
+
 async function findFiles( directory, fileNames ) {
 
 	const matches = {};
@@ -56,9 +68,10 @@ async function findFiles( directory, fileNames ) {
 
 }
 
-async function downloadWindowsBinaries() {
+async function downloadWindowsBinaries( tag ) {
 
-	const response = await fetch( 'https://api.github.com/repos/libjxl/libjxl/releases/latest', {
+	const releasePath = tag ? `tags/${ tag }` : 'latest';
+	const response = await fetch( `https://api.github.com/repos/libjxl/libjxl/releases/${ releasePath }`, {
 		headers: {
 			Accept: 'application/vnd.github+json',
 			'User-Agent': 'jxlpress-fetch-cjxl',
@@ -94,7 +107,7 @@ async function downloadWindowsBinaries() {
 			copyFile( binaries[ 'cjxl.exe' ], path.join( outputDirectory, 'cjxl.exe' ) ),
 			copyFile( binaries[ 'djxl.exe' ], path.join( outputDirectory, 'djxl.exe' ) ),
 		] );
-		console.log( `Windows x64 用 cjxl / djxl を ${ outputDirectory } に展開しました。` );
+		console.log( `Windows x64 用 cjxl / djxl（libjxl ${ release.tag_name }）を ${ outputDirectory } に展開しました。` );
 
 	} finally {
 
@@ -118,7 +131,7 @@ try {
 
 	} else if ( platform === 'win32' ) {
 
-		await downloadWindowsBinaries();
+		await downloadWindowsBinaries( targetTag() );
 
 	} else {
 

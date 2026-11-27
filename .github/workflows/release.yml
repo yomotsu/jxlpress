@@ -1,0 +1,113 @@
+# Builds the macOS and Windows packages from the tagged source and attaches them to a draft release.
+# Pushing a tag such as v0.1.1 runs everything; running it by hand only builds and keeps the files as workflow artifacts.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # libjxl release bundled as cjxl / djxl. Keep licenses/THIRD_PARTY_NOTICES.txt in sync when changing it.
+  LIBJXL_TAG: v0.13.0
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - name: Fetch cjxl / djxl
+        run: node scripts/fetch-cjxl.mjs --platform win32 --tag ${{ env.LIBJXL_TAG }}
+
+      - name: Build
+        run: npx electron-builder --win --publish never
+
+      # SignPath signing goes here once the project is approved by SignPath Foundation.
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            dist/*.exe
+          if-no-files-found: error
+
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      # libjxl has no macOS binaries, so they are built from source (about 20 minutes) and cached.
+      - name: Restore cjxl / djxl
+        id: cjxl-cache
+        uses: actions/cache@v4
+        with:
+          path: vendor/cjxl/darwin-*
+          key: cjxl-mac-${{ env.LIBJXL_TAG }}-${{ hashFiles( 'scripts/build-cjxl-mac.sh' ) }}
+
+      - name: Build cjxl / djxl
+        if: steps.cjxl-cache.outputs.cache-hit != 'true'
+        run: bash scripts/build-cjxl-mac.sh ${{ env.LIBJXL_TAG }} arm64 x64
+
+      - name: Build
+        run: npx electron-builder --mac --publish never
+        env:
+          # Ad-hoc signing only; do not look for a Developer ID in the keychain.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac
+          path: |
+            dist/*.dmg
+          if-no-files-found: error
+
+  release:
+    if: startsWith( github.ref, 'refs/tags/v' )
+    needs: [ windows, mac ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Write checksums
+        working-directory: dist
+        run: sha256sum *.dmg *.exe > SHA256SUMS.txt
+
+      # Created as a draft so the notes can be written before it goes public
+      # (the in-app update check only sees published releases).
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME" dist/*
+          --repo "$GITHUB_REPOSITORY"
+          --draft
+          --title "JXLPress ${GITHUB_REF_NAME#v}"
+          --generate-notes
