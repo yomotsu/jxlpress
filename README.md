@@ -61,7 +61,7 @@ vendor/cjxl/darwin-arm64/cjxl, djxl
 vendor/cjxl/darwin-x64/cjxl, djxl
 ```
 
-**Windows**: 公式リリースの静的ビルドを取得します。
+**Windows**: 公式リリースの静的ビルドを取得します。zip が Deflate64 で圧縮されているため、Windows 上で実行する場合は PowerShell 7（`pwsh`）か 7-Zip（`7z`）が必要です（Windows PowerShell 5.1 では展開できません）。
 
 ```sh
 npm run fetch-cjxl -- --platform win32                # 最新リリース

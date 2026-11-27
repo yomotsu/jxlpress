@@ -7,20 +7,37 @@ import { fileURLToPath } from 'node:url';
 const scriptDirectory = path.dirname( fileURLToPath( import.meta.url ) );
 const projectDirectory = path.resolve( scriptDirectory, '..' );
 
-// The libjxl zip uses Deflate64, which bsdtar (tar) cannot read.
-// Info-ZIP unzip (macOS) and .NET's Expand-Archive (Windows) can.
+// The libjxl zip uses Deflate64, which bsdtar (tar) and Windows PowerShell 5.1 (.NET Framework) cannot read.
+// Info-ZIP unzip (macOS), PowerShell 7 (.NET) and 7-Zip can, so Windows tries those first.
+function extractCommands( archivePath, extractDirectory ) {
+
+	if ( process.platform !== 'win32' ) return [ [ 'unzip', [ '-q', '-o', archivePath, '-d', extractDirectory ] ] ];
+
+	const expandArchive = `$ErrorActionPreference = 'Stop'; Expand-Archive -LiteralPath '${ archivePath }' -DestinationPath '${ extractDirectory }' -Force`;
+	return [
+		[ 'pwsh', [ '-NoProfile', '-Command', expandArchive ] ],
+		[ '7z', [ 'x', '-y', `-o${ extractDirectory }`, archivePath ] ],
+		[ 'powershell', [ '-NoProfile', '-Command', expandArchive ] ],
+	];
+
+}
+
 function extractZip( archivePath, extractDirectory ) {
 
-	const command = process.platform === 'win32'
-		? [ 'powershell', [ '-NoProfile', '-Command', `Expand-Archive -LiteralPath '${ archivePath }' -DestinationPath '${ extractDirectory }' -Force` ] ]
-		: [ 'unzip', [ '-q', '-o', archivePath, '-d', extractDirectory ] ];
-
 	// Run from PowerShell 7 (e.g. GitHub Actions), the inherited PSModulePath makes Windows PowerShell 5.1
-	// load PowerShell 7's Archive module, whose Expand-Archive fails there. Let 5.1 use its own modules.
+	// load PowerShell 7's Archive module, which fails there. Let each shell use its own modules.
 	const env = Object.fromEntries( Object.entries( process.env ).filter( ( [ key ] ) => key.toLowerCase() !== 'psmodulepath' ) );
-	const extraction = spawnSync( command[ 0 ], command[ 1 ], { stdio: 'inherit', env } );
-	if ( extraction.error ) throw extraction.error;
-	if ( extraction.status !== 0 ) throw new Error( `${ command[ 0 ] } による zip 展開に失敗しました (終了コード ${ extraction.status })。` );
+	const failures = [];
+
+	for ( const [ command, args ] of extractCommands( archivePath, extractDirectory ) ) {
+
+		const extraction = spawnSync( command, args, { stdio: 'inherit', env } );
+		if ( ! extraction.error && extraction.status === 0 ) return;
+		failures.push( extraction.error ? `${ command }: ${ extraction.error.code || extraction.error.message }` : `${ command }: 終了コード ${ extraction.status }` );
+
+	}
+
+	throw new Error( `zip を展開できませんでした（${ failures.join( ', ' ) }）。Windows では PowerShell 7 か 7-Zip が必要です。` );
 
 }
 
