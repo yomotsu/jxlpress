@@ -110,4 +110,5 @@ jobs:
           --repo "$GITHUB_REPOSITORY"
           --draft
           --title "JXLPress ${GITHUB_REF_NAME#v}"
+          --notes "**Code signing**: Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/). See [CODE_SIGNING_POLICY.md](https://github.com/yomotsu/jxlpress/blob/main/CODE_SIGNING_POLICY.md)."
           --generate-notes
