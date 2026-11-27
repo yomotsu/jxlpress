@@ -90,11 +90,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # Build provenance: lets users check with `gh attestation verify` that a file was built here from this tag.
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
+
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            dist/*.dmg
+            dist/*.exe
 
       - name: Write checksums
         working-directory: dist

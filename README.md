@@ -34,6 +34,12 @@ HEVC（HEIC）のデコードには特許ライセンス上の論点がありま
 
 [GitHub Releases](https://github.com/yomotsu/jxlpress/releases) から、使っている OS 用のファイルをダウンロードしてください。各ファイルの SHA-256 は `SHA256SUMS.txt` に記載しています。
 
+v0.1.1 以降の配布ファイルには、GitHub Actions がこのリポジトリのタグからビルドしたことを示すビルド証明（[artifact attestation](https://docs.github.com/actions/security-for-github-actions/using-artifact-attestations)）が付いています。[GitHub CLI](https://cli.github.com/) で確認できます。
+
+```sh
+gh attestation verify JXLPress-<version>-win-x64-setup.exe --repo yomotsu/jxlpress
+```
+
 **Code signing**: Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/). Windows 版のコード署名に SignPath Foundation を利用します（現在申請中で、承認後のリリースから署名されます）。詳しくは [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md) を参照してください。
 
 ### インストール
